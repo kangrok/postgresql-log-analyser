@@ -24,16 +24,15 @@ public class LogParser {
 
         Map<String, StudentLogs> parsedLogs = new HashMap<>();
 
-        if (logs.getOriginalFilename().endsWith(".zip")) {
+        if (logs.getOriginalFilename() != null && logs.getOriginalFilename().endsWith(".zip")) {
+            ZipEntry entry;
             try (ZipInputStream inputStream = new ZipInputStream(logs.getInputStream(), Charset.forName("CP437"))) {
-                ZipEntry entry;
                 while ((entry = inputStream.getNextEntry()) != null) {
                     if (entry.isDirectory()) {
                         continue;
                     }
                     try {
                         BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
-
                         String entryName = getStudentName(entry.getName());
 
                         if (!parsedLogs.containsKey(entryName)) {
@@ -47,12 +46,16 @@ public class LogParser {
                             studentLogs.addFileName(getFileName(entry.getName()));
                             studentLogs.addAllLogs(parsePlainTextLog(br, start, end));
                         }
+                    } catch (IOException e) {
+                        String entryName = getStudentName(entry.getName());
+                        if (!parsedLogs.containsKey(entryName)) {
+                            parsedLogs.put(entryName, new StudentLogs(entryName));
+                        }
+                        parsedLogs.get(entryName).setError(e.getMessage());
                     } finally {
                         inputStream.closeEntry();
                     }
                 }
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to parse logs: " + e);
             }
         } else {
             throw new IOException("Invalid file format: " + logs.getContentType());
@@ -60,7 +63,7 @@ public class LogParser {
         return parsedLogs.values().stream().toList();
     }
 
-    public static List<LogData> parseSingle(MultipartFile log, Date start, Date end) {
+    public static List<LogData> parseSingle(MultipartFile log, Date start, Date end) throws IOException {
 
         try (BufferedReader br = new BufferedReader(new InputStreamReader(log.getInputStream()))) {
             if (log.getOriginalFilename().endsWith(".json")) {
@@ -68,14 +71,12 @@ public class LogParser {
             } else if (log.getOriginalFilename().endsWith(".log")) {
                 return parsePlainTextLog(br, start, end);
             } else {
-                throw new RuntimeException("Invalid file format: " + log.getContentType());
+                throw new IOException("Invalid file format: " + log.getContentType());
             }
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to parse log file: " + e);
         }
     }
 
-    private static List<LogData> parseJsonLog(BufferedReader br, Date start, Date end) throws IOException {
+    private static List<LogData> parseJsonLog(BufferedReader br, Date start, Date end) throws IOException{
         List<LogData> parsedLogFile = new ArrayList<>();
 
         ObjectMapper mapper = new ObjectMapper();
@@ -94,8 +95,9 @@ public class LogParser {
                         if (logTime.after(end)) {
                             break;
                         }
-                    } catch (ParseException e) {
+                    } catch (ParseException | StringIndexOutOfBoundsException e) {
                         System.out.println("Unable to parse date: " + e + line);
+                        throw new IOException(e);
                     }
                 }
                 LogData logData = mapper.readValue(line, LogData.class);
@@ -129,7 +131,7 @@ public class LogParser {
                                     break;
                                 }
                             } catch (ParseException e) {
-                                throw new RuntimeException("Unable to parse date: " + e);
+                                System.out.println("Unable to parse date in plain text log: " + e);
                             }
                         }
                         if (currentLogData.getErrorSeverity() != null && currentLogData.getStatement() != null) {

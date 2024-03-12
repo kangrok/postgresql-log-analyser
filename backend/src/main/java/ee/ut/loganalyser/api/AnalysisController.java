@@ -7,6 +7,7 @@ import ee.ut.loganalyser.logdata.LogData;
 import ee.ut.loganalyser.logdata.StudentLogs;
 import lombok.AllArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,14 +30,17 @@ public class AnalysisController {
             @RequestParam MultipartFile logs,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date end
-    ) throws IOException {
+    ) {
+        try {
+            List<StudentLogs> parsedLogData = LogParser.parseZip(logs, start, end);
+            List<Analysis> analyses = new ArrayList<>();
+            parsedLogData.forEach(studentLogs -> analyses.add(new Analysis(studentLogs)));
+            AnalysisSummary summary = new AnalysisSummary(analyses);
 
-        List<StudentLogs> parsedLogData = LogParser.parseZip(logs, start, end);
-        List<Analysis> analyses = new ArrayList<>();
-        parsedLogData.forEach(studentLogs -> analyses.add(new Analysis(studentLogs)));
-        AnalysisSummary summary = new AnalysisSummary(analyses);
-
-        return ResponseEntity.ok(new AnalysisResponse(analyses, summary));
+            return ResponseEntity.ok(new AnalysisResponse(analyses, summary));
+        } catch (IOException e) {
+            return new ResponseEntity<>(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+        }
     }
 
     @PostMapping(path = "/analysis/single")
@@ -45,8 +49,12 @@ public class AnalysisController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date end
     ) {
-        List<LogData> parsedLog = LogParser.parseSingle(logs, start, end);
-        Analysis analysis = new Analysis(parsedLog);
-        return ResponseEntity.ok(analysis);
+        try {
+            List<LogData> parsedLog = LogParser.parseSingle(logs, start, end);
+            Analysis analysis = new Analysis(parsedLog);
+            return ResponseEntity.ok(analysis);
+        } catch (IOException e) {
+            return new ResponseEntity<>(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+        }
     }
 }

@@ -9,7 +9,7 @@
 
             <v-card-text>
                 <v-alert
-                    v-if="errorMessage !== ''"
+                    v-if="uploadFailed"
                     class="mb-6 rounded-0"
                     color="red"
                     variant="tonal"
@@ -97,8 +97,13 @@ export default {
             axios.post('/analysis/' + path, this.createRequestData(), {
                 headers: {
                     'Content-Type': 'multipart/form-data'
-                }
-            }).then(response => this.$emit('analysis', response.data))
+                }})
+                .then(response => this.$emit('analysis', response.data))
+                .catch(() => {
+                    this.uploadFailed = true;
+                    this.errorMessage = 'Faili üleslaadimine ebaõnnestus. Kontrolli, et valitud fail on õiges' +
+                        ' formaadis (.zip, .json või .log).'
+                })
         },
 
         validateDates() {

@@ -4,39 +4,41 @@ import ee.ut.loganalyser.logdata.ErrorSeverity;
 import ee.ut.loganalyser.logdata.ErrorType;
 import ee.ut.loganalyser.logdata.LogData;
 import ee.ut.loganalyser.logdata.StudentLogs;
-import lombok.AccessLevel;
-import lombok.Data;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.*;
 
 @Data
 public class Analysis {
 
-    String studentName;
+    private String studentName;
+    private String[] fileNames;
 
-    String[] fileNames;
-    int errorCount = 0;
-    int uniqueErrorCount = 0;
-    int validCount = 0;
+    private String error;
 
-    int syntaxErrorCount = 0;
-    int nonExistentValueCount = 0;
-    int constraintViolationCount = 0;
-    int alreadyExistsErrorCount = 0;
-    int typoCount = 0;
-    int aggregateErrorCount = 0;
-    int otherErrorCount = 0;
+    private int errorCount = 0;
+    private int uniqueErrorCount = 0;
+    private int validCount = 0;
+
+    private int syntaxErrorCount = 0;
+    private int nonExistentValueCount = 0;
+    private int constraintViolationCount = 0;
+    private int alreadyExistsErrorCount = 0;
+    private int typoCount = 0;
+    private int aggregateErrorCount = 0;
+    private int otherErrorCount = 0;
 
     @Setter(AccessLevel.NONE)
+    @Getter(AccessLevel.NONE)
     List<LogData> logs;
 
-    Map<String, Integer> repeatedErrors = new LinkedHashMap<>();
+    List<RepeatedError> repeatedErrors = new ArrayList<>();
 
     public Analysis(StudentLogs studentLogs) {
         this.studentName = studentLogs.getName();
         this.fileNames = studentLogs.getFileNames().toArray(String[]::new);
         this.logs = studentLogs.getLogs();
+        this.error = this.fileNames.length == 0 ? "Logifaile ei leitud." : studentLogs.getError();
         categorizeLogData();
     }
 
@@ -91,6 +93,7 @@ public class Analysis {
 
         repeatedErrorCounts.entrySet().stream()
                 .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-                .forEach(entry -> repeatedErrors.put(entry.getKey().getMessage(), entry.getValue()));
+                .forEach(entry -> repeatedErrors.add(
+                        new RepeatedError(entry.getKey().getMessage(), entry.getKey().getStatement(), entry.getValue())));
     }
 }

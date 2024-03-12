@@ -1,14 +1,23 @@
 /* eslint-disable */
 <template>
-    <v-container v-if="analysis.hasOwnProperty('errorCount')">
+    <v-container v-if="analysis != null">
 
         <v-container class="pt-8">
             <h1>Logide analüüs</h1>
-            <h2 v-if="analysis.hasOwnProperty('studentName') && analysis.studentName != null" class="pb-2">{{ analysis.studentName }}</h2>
-            <h2 v-else-if="!analysis.hasOwnProperty('studentName')" class="pb-6">Rühma kokkuvõte</h2>
+            <h2 v-if="isStudent && analysis.studentName != null" class="pb-2">{{ analysis.studentName }}</h2>
+            <h2 v-else-if="!isStudent" class="pb-6">Rühma kokkuvõte</h2>
 
-            <v-card class="pt-8 rounded-0" >
-                <v-row class="pb-6 px-16" v-if="analysis.studentName != null">
+            <v-alert
+                v-if="analysis.error"
+                class="mb-6 rounded-0"
+                color="red"
+                variant="tonal"
+            >
+                {{ errorMessage }}
+            </v-alert>
+
+            <v-card class="pt-8 rounded-0" v-if="hasLogFiles">
+                <v-row class="pb-6 px-16" v-if="isStudent">
                     <v-col>
                         Analüüsitud failid:
                     </v-col>
@@ -18,7 +27,7 @@
                         </p>
                     </v-col>
                 </v-row>
-                <v-divider v-if="analysis.studentName != null"></v-divider>
+                <v-divider v-if="isStudent"></v-divider>
                 <div v-if="analysis.validCount + analysis.errorCount > 0">
 
                     <v-row class="px-16 py-8">
@@ -71,33 +80,9 @@
                         <Bar :data="chartData" :options="chartOptions" />
                     </v-container>
 
-
-                    <v-expansion-panels v-if="Object.keys(analysis.repeatedErrors).length > 0">
-                        <v-expansion-panel
-                            title="Korduvad vead"
-                        >
-                            <v-expansion-panel-text>
-                                <v-table>
-                                    <thead>
-                                    <tr>
-                                        <th>Veateade</th>
-                                        <th v-if="analysis.studentName != null">Korduste arv</th>
-                                        <th v-else>Kogus</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <tr v-for="[error, count] in Object.entries(analysis.repeatedErrors)" :key="error">
-                                        <td v-if="error.hasOwnProperty('message')">{{ error.message }}</td>
-                                        <td v-else >{{ error }}</td>
-                                        <td>{{ count }}</td>
-                                    </tr>
-                                    </tbody>
-                                </v-table>
-                            </v-expansion-panel-text>
-                        </v-expansion-panel>
-                    </v-expansion-panels>
+                    <RepeatedErrorsPanel v-if="analysis.repeatedErrors.length !== 0" :errors="analysis.repeatedErrors"/>
                 </div>
-                <p v-else class="pa-8">Valitud ajavahemikus ei tehtud ühtegi päringut.</p>
+                <p v-else-if="!analysis.error" class="pa-8">Valitud ajavahemikus ei tehtud ühtegi päringut.</p>
             </v-card>
         </v-container>
     </v-container>
@@ -112,15 +97,17 @@
 <script>
 import { Bar } from 'vue-chartjs'
 import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
+import RepeatedErrorsPanel from "@/components/RepeatedErrorsPanel";
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 
 export default {
     name: "AnalysisSummary",
-    components: { Bar },
+    components: { RepeatedErrorsPanel, Bar },
     props: {
         analysis: {
             studentName: String,
+            error: String,
             fileNames: Array,
             errorCount: Number,
             uniqueErrorCount: Number,
@@ -135,6 +122,7 @@ export default {
             repeatedErrors: Object,
         }
     },
+
     data() {
         return {
             chartOptions: {
@@ -157,7 +145,6 @@ export default {
 
     computed: {
         chartData() {
-            console.log(Object.keys(this.analysis.repeatedErrors).length);
             return {
                 labels: ['Süntaksivead', ['Defineerimata', 'väärtuse', 'kasutamine'], ['Kitsenduse', 'rikkumine'],
                          'Trükivead', ['Agregeeritud', 'funktsiooni', 'vead'], ['Topelt', 'defineerimine'], 'Muud vead'],
@@ -175,6 +162,20 @@ export default {
                     }
                 ],
             }
+        },
+
+        errorMessage() {
+            return this.analysis.fileNames && this.analysis.fileNames.length !== 0
+                ? "Logifaili lugemine ebaõnnestus, faili sisuks ei ole PostgreSQL serveri logid."
+                : "Logifaile ei leitud"
+        },
+
+        isStudent() {
+            return Object.prototype.hasOwnProperty.call(this.analysis, 'studentName');
+        },
+
+        hasLogFiles() {
+            return !this.isStudent || this.analysis.fileNames.length !== 0;
         }
     }
 }
@@ -188,10 +189,6 @@ export default {
 
 .valid-text-color {
     color: green;
-}
-
-.table-text {
-    padding: 8px 0 8px 0;
 }
 
 </style>

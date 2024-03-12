@@ -11,6 +11,7 @@ import java.util.List;
 public class StudentLogs {
 
     private final String name;
+    private String error = null;
     private List<String> fileNames = new ArrayList<>();
     private List<LogData> logs = new ArrayList<>();
 

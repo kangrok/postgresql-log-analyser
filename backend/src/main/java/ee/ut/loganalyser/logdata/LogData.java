@@ -5,7 +5,6 @@ import lombok.*;
 
 import java.util.Objects;
 
-@AllArgsConstructor
 @NoArgsConstructor
 @Data
 public class LogData {
@@ -16,7 +15,7 @@ public class LogData {
     }
 
     @JsonProperty("error_severity")
-    ErrorSeverity errorSeverity;   // analyse ERROR, ignore LOG, FATAL
+    ErrorSeverity errorSeverity;
     String message;
     String detail;
     String hint;
