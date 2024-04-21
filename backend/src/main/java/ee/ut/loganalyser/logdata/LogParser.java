@@ -81,6 +81,7 @@ public class LogParser {
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
         String line;
 
         while ((line = br.readLine()) != null) {
@@ -101,7 +102,11 @@ public class LogParser {
                     }
                 }
                 LogData logData = mapper.readValue(line, LogData.class);
-                if ((logData.getErrorSeverity() != ErrorSeverity.LOG && logData.getStatement() != null) || isByStudent(logData)) {
+
+                if (logData.getErrorSeverity() != ErrorSeverity.LOG && logData.getStatement() != null) {
+                    parsedLogFile.add(logData);
+                } else if (isByStudent(logData)) {
+                    logData.message = logData.message.substring(20);
                     parsedLogFile.add(logData);
                 }
             }
@@ -121,18 +126,16 @@ public class LogParser {
             if (!line.isBlank()) {
                 if (lineStartPattern.matcher(line).matches()) {
                     if (line.contains("ERROR:")) {
-                        if (start != null && end != null) {
-                            try {
-                                Date logTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(line.substring(0, 19));
-                                if (logTime.before(start)) {
-                                    continue;
-                                }
-                                if (logTime.after(end)) {
-                                    break;
-                                }
-                            } catch (ParseException e) {
-                                System.out.println("Unable to parse date in plain text log: " + e);
+                        try {
+                            currentLogData.timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(line.substring(0, 19));
+                            if (start != null && currentLogData.timestamp.before(start)) {
+                                continue;
                             }
+                            if (end != null && currentLogData.timestamp.after(end)) {
+                                break;
+                            }
+                        } catch (ParseException e) {
+                            System.out.println("Unable to parse date in plain text log: " + e);
                         }
                         if (currentLogData.getErrorSeverity() != null && currentLogData.getStatement() != null) {
                             parsedLogFile.add(currentLogData);

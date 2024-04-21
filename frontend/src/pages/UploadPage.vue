@@ -2,7 +2,7 @@
 <template>
     <div class="container">
 
-        <v-card class="upload-container pa-6 rounded-0" border >
+        <v-card class="upload-container pa-6">
             <v-card-title>Laadi üles logifailide kaust</v-card-title>
 
             <v-spacer></v-spacer>
@@ -29,9 +29,9 @@
 
 
             <v-card-text>
-                <h3 class="pb-4">
+                <div class="text-overline pb-2">
                     Analüüsi ajavahemik
-                </h3>
+                </div>
                 <v-radio-group v-model="periodSelection">
                     <v-radio label="Kõik logid" value="all"></v-radio>
                     <v-radio label="Viimane nädal" value="week"></v-radio>

@@ -6,6 +6,8 @@ import ee.ut.loganalyser.logdata.LogData;
 import ee.ut.loganalyser.logdata.StudentLogs;
 import lombok.*;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Data
@@ -15,6 +17,8 @@ public class Analysis {
     private String[] fileNames;
 
     private String error;
+
+    private int totalCount = 0;
 
     private int errorCount = 0;
     private int uniqueErrorCount = 0;
@@ -32,6 +36,8 @@ public class Analysis {
     @Getter(AccessLevel.NONE)
     List<LogData> logs;
 
+    List<QueryEventGroup> queryEventGroups = new ArrayList<>();
+
     List<RepeatedError> repeatedErrors = new ArrayList<>();
 
     public Analysis(StudentLogs studentLogs) {
@@ -40,11 +46,14 @@ public class Analysis {
         this.logs = studentLogs.getLogs();
         this.error = this.fileNames.length == 0 ? "Logifaile ei leitud." : studentLogs.getError();
         categorizeLogData();
+        createQueryEventGroups();
     }
 
-    public Analysis(List<LogData> log) {
+    public Analysis(List<LogData> log, String fileName) {
         this.logs = log;
+        this.fileNames = new String[]{fileName};
         categorizeLogData();
+        createQueryEventGroups();
     }
 
     private void categorizeLogData() {
@@ -89,11 +98,41 @@ public class Analysis {
                 validCount++;
             }
         }
+
+        totalCount = errorCount + validCount;
         uniqueErrorCount = uniqueErrors.size();
 
         repeatedErrorCounts.entrySet().stream()
                 .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
                 .forEach(entry -> repeatedErrors.add(
                         new RepeatedError(entry.getKey().getMessage(), entry.getKey().getStatement(), entry.getValue())));
+    }
+
+    private void createQueryEventGroups() {
+
+        if (this.logs.isEmpty()) return;
+
+        DateFormat dateFormatter = new SimpleDateFormat("dd MMM yyyy hh:mm:ss");
+
+        QueryEventGroup queryEventGroup = new QueryEventGroup(
+                this.logs.get(0).getErrorType() == ErrorType.VALID,
+                dateFormatter.format(this.logs.get(0).getTimestamp()),
+                0
+                );
+
+        for (LogData log : this.logs) {
+            if (log.getErrorType() == ErrorType.VALID && queryEventGroup.isValid
+            || log.getErrorType() != ErrorType.VALID && !queryEventGroup.isValid) {
+                queryEventGroup.count++;
+            } else {
+                queryEventGroups.add(queryEventGroup);
+                queryEventGroup = new QueryEventGroup(
+                        log.getErrorType() == ErrorType.VALID,
+                        dateFormatter.format(log.getTimestamp()),
+                        1
+                );
+            }
+        }
+        queryEventGroups.add(queryEventGroup);
     }
 }

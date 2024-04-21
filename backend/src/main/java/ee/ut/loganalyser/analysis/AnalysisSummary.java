@@ -9,6 +9,8 @@ import java.util.*;
 
 @Data
 public class AnalysisSummary {
+
+    private int totalCount;
     private int errorCount = 0;
     private int uniqueErrorCount = 0;
     private int validCount = 0;
@@ -36,6 +38,7 @@ public class AnalysisSummary {
             this.aggregateErrorCount += analysis.getAggregateErrorCount();
             this.otherErrorCount += analysis.getOtherErrorCount();
         }
+        this.totalCount = this.errorCount + this.validCount;
         countRepeatedErrors(analyses);
     }
 

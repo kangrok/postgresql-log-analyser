@@ -51,7 +51,7 @@ public class AnalysisController {
     ) {
         try {
             List<LogData> parsedLog = LogParser.parseSingle(logs, start, end);
-            Analysis analysis = new Analysis(parsedLog);
+            Analysis analysis = new Analysis(parsedLog, logs.getOriginalFilename());
             return ResponseEntity.ok(analysis);
         } catch (IOException e) {
             return new ResponseEntity<>(HttpStatus.UNSUPPORTED_MEDIA_TYPE);

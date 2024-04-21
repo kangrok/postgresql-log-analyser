@@ -1,14 +1,34 @@
-/* eslint-disable */
 <template>
 
-    <div class="text-h6 py-3">Rühma kokkuvõte</div>
+    <div class="text-h6 py-3">{{ analysis.studentName }}</div>
 
-    <v-card class="py-10 rounded-0">
+    <v-alert
+        v-if="analysis.error"
+        class="mb-6 rounded-0"
+        color="red"
+        variant="tonal"
+    >
+        {{ errorMessage }}
+    </v-alert>
 
-        <div v-if="analysis.totalCount > 0">
+    <v-card class="py-8 rounded-0" v-if="analysis.fileNames.length !== 0">
 
-            <v-row class="px-16" justify="space-between">
-                <v-table style="width: 350px;">
+        <v-row class="pb-6 px-16">
+            <v-col>
+                Analüüsitud failid:
+            </v-col>
+            <v-col>
+                <p v-for="fileName in analysis.fileNames" :key="fileName">
+                    {{ fileName }}
+                </p>
+            </v-col>
+        </v-row>
+
+        <v-divider v-if="!analysis.error"/>
+
+        <div v-if="analysis.totalCount !== 0">
+            <v-row class="pa-8 justify-center">
+                <v-table class="w-66">
                     <thead></thead>
                     <tbody>
                     <tr>
@@ -36,26 +56,29 @@
                     </tr>
                     </tbody>
                 </v-table>
-
-                <v-progress-circular
-                    class="mr-4 mt-6"
-                    :size="160"
-                    :width="30"
-                    :model-value="100 * analysis.errorCount / analysis.totalCount"
-                    color="red-lighten-1"
-                    bg-color="light-green-lighten-1"
-                />
             </v-row>
+
+            <QueryEventsBar
+                :query-event-groups="analysis.queryEventGroups"
+                :total-query-count="analysis.totalCount"
+            />
         </div>
-        <p v-else class="pa-8">Valitud ajavahemikus ei tehtud ühtegi päringut.</p>
+        <p v-else-if="!analysis.error" class="pt-8 px-16">Valitud ajavahemikus ei tehtud ühtegi päringut.</p>
     </v-card>
+
 </template>
 
 <script>
+import QueryEventsBar from "@/components/QueryEventsBar";
+
 export default {
-    name: "AnalysisSummary",
+    name: "AnalysisIndividual",
+    components: {QueryEventsBar},
     props: {
         analysis: {
+            studentName: String,
+            error: String,
+            fileNames: Array,
             totalCount: Number,
             errorCount: Number,
             uniqueErrorCount: Number,
@@ -68,13 +91,21 @@ export default {
             typoCount: Number,
             otherErrorCount: Number,
             repeatedErrors: Array,
+            queryEventGroups: Array,
         }
     },
+
+    computed: {
+        errorMessage() {
+            return this.analysis.fileNames.length !== 0
+                ? "Logifaili lugemine ebaõnnestus, faili sisuks ei ole PostgreSQL serveri logid."
+                : "Logifaile ei leitud"
+        },
+    }
 }
 </script>
 
 <style scoped>
-
 .error-text-color {
     color: red;
 }
@@ -82,5 +113,4 @@ export default {
 .valid-text-color {
     color: green;
 }
-
 </style>

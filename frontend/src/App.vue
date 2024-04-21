@@ -1,6 +1,7 @@
 /* eslint-disable */
-<template v-bind:style="{ backgroundColor: '#F7F8FC'}">
-    <v-app>
+<template>
+    <v-app style="background-color: #F7F8FC">
+
         <v-app-bar app density="comfortable" elevation="0" color="#3F51B5">
             <v-toolbar-title>PostgreSQL logide analüsaator</v-toolbar-title>
         </v-app-bar>
@@ -9,12 +10,12 @@
             <AnalysisPage v-if="showAnalysis" @upload="this.showAnalysis = false" :analysis-result="this.analysis"/>
             <UploadPage v-else @analysis="openAnalysis"/>
 
-
         </v-container>
+
     </v-app>
 </template>
 
-<script lang="ts">
+<script>
 import UploadPage from "@/pages/UploadPage.vue"
 import AnalysisPage from "@/pages/AnalysisPage.vue";
 import {defineComponent} from "vue";
@@ -40,8 +41,9 @@ export default defineComponent({
 });
 </script>
 <style>
-#app {
-    max-width: 762px;
+
+.content {
+    max-width: 820px !important;
     margin: 54px auto;
     align-items: center;
 }
