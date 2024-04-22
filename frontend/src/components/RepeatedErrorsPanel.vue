@@ -55,4 +55,8 @@ export default {
     font-family: monospace;
 }
 
+.mdi-chevron-down {
+    color: black;
+}
+
 </style>

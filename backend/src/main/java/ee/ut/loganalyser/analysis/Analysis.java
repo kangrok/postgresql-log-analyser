@@ -112,7 +112,7 @@ public class Analysis {
 
         if (this.logs.isEmpty()) return;
 
-        DateFormat dateFormatter = new SimpleDateFormat("dd MMM yyyy hh:mm:ss");
+        DateFormat dateFormatter = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
 
         QueryEventGroup queryEventGroup = new QueryEventGroup(
                 this.logs.get(0).getErrorType() == ErrorType.VALID,
