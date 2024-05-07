@@ -2,7 +2,7 @@
     <v-container class="px-8">
 
         <v-row class="py-2 justify-center">
-            <template v-for="group in queryEventGroups" :key="group.time">
+            <template v-for="group in indexedItems" :key="group.id">
                 <v-card
                     class="rounded-0"
                     elevation="0"
@@ -29,7 +29,7 @@
             <div class="time-marker text-end">
                 Lõpp:
                 <br/>
-                {{ queryEventGroups[queryEventGroups.length - 1].time }}
+                {{ endTime }}
             </div>
         </v-row>
 
@@ -42,11 +42,12 @@ export default {
     props: {
         queryEventGroups: Array,
         totalQueryCount: Number,
+        endTime: String,
     },
 
     methods: {
         getGroupLength(queryCount) {
-            return Math.round(586 * queryCount / this.$props.totalQueryCount);
+            return Math.round(750 * queryCount / this.$props.totalQueryCount);
         },
 
         getGroupDescription(group) {
@@ -55,7 +56,16 @@ export default {
             else if (group.count === 1) return 'vigane päring'
             else return 'vigast päringut'
         }
-    }
+    },
+
+    computed: {
+        indexedItems() {
+            return this.queryEventGroups.map((item, index) => ({
+                id: index,
+                ...item
+            }))
+        }
+    },
 }
 </script>
 

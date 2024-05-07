@@ -1,25 +1,34 @@
 package ee.ut.loganalyser.analysis;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import ee.ut.loganalyser.logdata.ErrorSeverity;
 import ee.ut.loganalyser.logdata.ErrorType;
 import ee.ut.loganalyser.logdata.LogData;
 import ee.ut.loganalyser.logdata.StudentLogs;
-import lombok.*;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import lombok.Data;
 
 @Data
 public class Analysis {
+
+    static DateFormat dateFormatter = new SimpleDateFormat("dd MMM yyyy HH:mm");
 
     private String studentName;
     private String[] fileNames;
 
     private String error;
 
-    private int totalCount = 0;
+    private String endTime;
 
+    private int totalCount = 0;
     private int errorCount = 0;
     private int uniqueErrorCount = 0;
     private int validCount = 0;
@@ -30,10 +39,10 @@ public class Analysis {
     private int alreadyExistsErrorCount = 0;
     private int typoCount = 0;
     private int aggregateErrorCount = 0;
+    private int customErrorCount = 0;
+    private int datatypeMismatchCount = 0;
     private int otherErrorCount = 0;
 
-    @Setter(AccessLevel.NONE)
-    @Getter(AccessLevel.NONE)
     List<LogData> logs;
 
     List<QueryEventGroup> queryEventGroups = new ArrayList<>();
@@ -45,15 +54,26 @@ public class Analysis {
         this.fileNames = studentLogs.getFileNames().toArray(String[]::new);
         this.logs = studentLogs.getLogs();
         this.error = this.fileNames.length == 0 ? "Logifaile ei leitud." : studentLogs.getError();
-        categorizeLogData();
-        createQueryEventGroups();
+        analyseLogs();
     }
 
     public Analysis(List<LogData> log, String fileName) {
         this.logs = log;
         this.fileNames = new String[]{fileName};
+        analyseLogs();
+    }
+
+    private void analyseLogs() {
         categorizeLogData();
         createQueryEventGroups();
+
+        if (this.totalCount > 0) {
+            this.endTime = dateFormatter.format(this.logs.get(this.totalCount - 1).getTimestamp());
+        }
+        
+        if (this.totalCount > 200) {
+            this.logs = this.logs.subList(this.totalCount - 200, this.totalCount);
+        }
     }
 
     private void categorizeLogData() {
@@ -67,8 +87,12 @@ public class Analysis {
                 if (logData.getHint() != null && logData.getHint().contains("Perhaps you meant")) {
                     logData.setErrorType(ErrorType.TYPO);
                     typoCount++;
-                } else if (Arrays.stream(new String[] {"aggregate", "group by", "having"})
-                        .anyMatch(logData.getMessage().toLowerCase()::contains)) {
+                } else if ("42804".equals(logData.getStateCode())) {
+                    logData.setErrorType(ErrorType.DATATYPE_MISMATCH);
+                    datatypeMismatchCount++;
+                } else if ("42803".equals(logData.getStateCode())
+                        || logData.getMessage().toLowerCase().contains("group")
+                        || logData.getMessage().toLowerCase().contains("having")) {
                     logData.setErrorType(ErrorType.AGGREGATE);
                     aggregateErrorCount++;
                 } else if (logData.getMessage().contains("syntax")) {
@@ -83,6 +107,9 @@ public class Analysis {
                 } else if (logData.getMessage().contains("already exists")) {
                     logData.setErrorType(ErrorType.ALREADY_EXISTS);
                     alreadyExistsErrorCount++;
+                } else if ("P0001".equals(logData.getStateCode())) {
+                    logData.setErrorType(ErrorType.CUSTOM_EXCEPTION);
+                    customErrorCount++;
                 } else {
                     logData.setErrorType(ErrorType.OTHER);
                     otherErrorCount++;
@@ -111,8 +138,6 @@ public class Analysis {
     private void createQueryEventGroups() {
 
         if (this.logs.isEmpty()) return;
-
-        DateFormat dateFormatter = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
 
         QueryEventGroup queryEventGroup = new QueryEventGroup(
                 this.logs.get(0).getErrorType() == ErrorType.VALID,

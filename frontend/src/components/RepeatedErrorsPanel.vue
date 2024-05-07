@@ -1,15 +1,12 @@
 <template>
-    <v-expansion-panels>
-        <v-expansion-panel title="Korduvad vead" >
-            <v-expansion-panel-text>
                 <v-data-table
                     v-if="this.errors[0].statement != null"
                     :headers="headers"
-                    :items="errors"
+                    :items="indexedItems"
                     :show-expand="true"
                     v-model:expanded="expanded"
                     item-value="statement"
-                    items-per-page="-1"
+                    items-per-page="10"
                 >
                     <template v-slot:expanded-row="{ item }">
                         <tr>
@@ -18,16 +15,12 @@
                             </td>
                         </tr>
                     </template>
-                    <template #bottom></template>
+
                 </v-data-table>
 
-                <v-data-table v-else :headers="headers" :items="errors" items-per-page="-1" >
-                    <template #bottom></template>
-                </v-data-table>
+                <v-data-table v-else :headers="headers" :items="errors" items-per-page="10" />
 
-            </v-expansion-panel-text>
-        </v-expansion-panel>
-    </v-expansion-panels>
+
 </template>
 
 <script>
@@ -40,10 +33,19 @@ export default {
     data() {
         return {
             headers: [
-                {title: "Veateade", key: "message", sortable: false, width: 450},
-                {title: this.errors[0].statement != null ? "Korduste arv" : "Kogus", key: "amount", width: 100}
+                {title: "Veateade", key: "message", sortable: false},
+                {title: this.errors[0].statement !== undefined ? "Korduste arv" : "Kogus", key: "amount"}
             ],
             expanded: [],
+        }
+    },
+
+    computed: {
+        indexedItems() {
+            return this.errors.map((item, index) => ({
+                id: index,
+                ...item
+            }))
         }
     },
 }
@@ -53,10 +55,6 @@ export default {
 
 .statement-code {
     font-family: monospace;
-}
-
-.mdi-chevron-down {
-    color: black;
 }
 
 </style>

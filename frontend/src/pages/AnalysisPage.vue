@@ -70,11 +70,16 @@
                             <Bar :data="chartData" :options="chartOptions"/>
                         </v-container>
 
-                        <RepeatedErrorsPanel
-                            v-if="displayData.repeatedErrors.length !== 0"
-                            :errors="displayData.repeatedErrors"
-                        />
+                        <v-container v-if="displayData.repeatedErrors.length !== 0" class="pa-8">
+                            <h3 class="pb-6">Korduvad vead</h3>
+                            <RepeatedErrorsPanel :errors="displayData.repeatedErrors"/>
+                        </v-container>
                     </v-card>
+                </div>
+
+                <div v-if="displayData.logs && displayData.totalCount > 0">
+                    <div class="text-h6 mt-6 mb-3">Kõik päringud</div>
+                    <LogViewer :log="displayData.logs"/>
                 </div>
 
             </v-container>
@@ -97,12 +102,13 @@ import AnalysisIndividual from "@/components/AnalysisIndividual.vue";
 import {Bar} from 'vue-chartjs'
 import {Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale} from 'chart.js'
 import RepeatedErrorsPanel from "@/components/RepeatedErrorsPanel.vue";
+import LogViewer from "@/components/LogViewer.vue";
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 
 export default {
     name: "AnalysisPage",
-    components: {AnalysisIndividual, AnalysisSummary, Bar, RepeatedErrorsPanel},
+    components: {AnalysisIndividual, AnalysisSummary, Bar, RepeatedErrorsPanel, LogViewer},
 
     props: {
         analysisResult: Object,
@@ -134,17 +140,20 @@ export default {
         chartData() {
             return {
                 labels: ['Süntaksivead', ['Defineerimata', 'väärtuse', 'kasutamine'], ['Kitsenduse', 'rikkumine'],
-                    'Trükivead', ['Agregeeritud', 'funktsiooni', 'vead'], ['Topelt', 'defineerimine'], 'Muud vead'],
+                    'Trükivead', ['Agregeeritud', 'funktsiooni', 'vead'], ['Topelt', 'defineerimine'],
+                    ['Andmetüübi', 'mittevastavus'], ['Ise loodud', 'veateated'], 'Muud vead'],
                 datasets: [
                     {
                         title: 'Veatüüpide jaotus',
-                        backgroundColor: ["#5EBD9B", "#F8DA62", '#104D83', "#F79F3D", "#72CAD8", '#E34F5B', '#A048A4'],
+                        backgroundColor: ["#5EBD9B", "#F8DA62", '#104D83', "#F79F3D", "#72CAD8", '#E34F5B', '#A048A4', '#9561e2', '#f66d9b'],
                         data: [this.displayData.syntaxErrorCount,
                             this.displayData.nonExistentValueCount,
                             this.displayData.constraintViolationCount,
                             this.displayData.typoCount,
                             this.displayData.aggregateErrorCount,
                             this.displayData.alreadyExistsErrorCount,
+                            this.displayData.datatypeMismatchCount,
+                            this.displayData.customErrorCount,
                             this.displayData.otherErrorCount]
                     }
                 ],

@@ -21,6 +21,8 @@ public class AnalysisSummary {
     private int alreadyExistsErrorCount = 0;
     private int aggregateErrorCount = 0;
     private int typoCount = 0;
+    private int datatypeMismatchCount = 0;
+    private int customErrorCount = 0;
     private int otherErrorCount = 0;
 
     List<RepeatedError> repeatedErrors = new ArrayList<>();
@@ -36,13 +38,15 @@ public class AnalysisSummary {
             this.alreadyExistsErrorCount += analysis.getAlreadyExistsErrorCount();
             this.typoCount += analysis.getTypoCount();
             this.aggregateErrorCount += analysis.getAggregateErrorCount();
+            this.datatypeMismatchCount += analysis.getDatatypeMismatchCount();
+            this.customErrorCount += analysis.getCustomErrorCount();
             this.otherErrorCount += analysis.getOtherErrorCount();
         }
         this.totalCount = this.errorCount + this.validCount;
         countRepeatedErrors(analyses);
     }
 
-    void countRepeatedErrors(List<Analysis> analyses) {
+    private void countRepeatedErrors(List<Analysis> analyses) {
         Map<String, Integer> errorCounts = new CaseInsensitiveKeyMap<>();
         for (Analysis analysis : analyses) {
             for (LogData logData : analysis.logs) {
@@ -52,7 +56,7 @@ public class AnalysisSummary {
             }
         }
         errorCounts.entrySet().stream()
-                .filter(errorCount -> errorCount.getValue() > 1)
+                .filter(errCount -> errCount.getValue() > 1)
                 .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
                 .forEach(entry -> repeatedErrors.add(new RepeatedError(entry.getKey(), entry.getValue())));
     }

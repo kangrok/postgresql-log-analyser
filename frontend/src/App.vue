@@ -43,12 +43,9 @@ export default defineComponent({
 <style>
 
 .content {
-    max-width: 820px !important;
+    width: 1020px !important;
     margin: 54px auto;
     align-items: center;
 }
 
-.v-btn {
-    color: #F5F5F5;
-}
 </style>

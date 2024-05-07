@@ -8,7 +8,7 @@
         <div v-if="analysis.totalCount > 0">
 
             <v-row class="px-16" justify="space-between">
-                <v-table style="width: 350px;">
+                <v-table class="pl-16" style="width: 520px;">
                     <thead></thead>
                     <tbody>
                     <tr>
@@ -17,17 +17,20 @@
                     </tr>
                     <tr>
                         <td>Edukate päringute arv:</td>
-                        <td class="valid-text-color">{{ analysis.validCount }}
-                            ({{
-                                (100 * analysis.validCount / (analysis.totalCount)).toFixed(1)
-                            }}%)
+                        <td>
+                            <v-chip color="green">
+                                {{ analysis.validCount }}
+                                ({{ (100 * analysis.validCount / (analysis.totalCount)).toFixed(1) }}%)
+                            </v-chip>
                         </td>
                     </tr>
                     <tr>
                         <td>Vigaste päringute arv:</td>
-                        <td class="error-text-color">{{ this.$props.analysis.errorCount }} ({{
-                                (100 * analysis.errorCount / (analysis.totalCount)).toFixed(1)
-                            }}%)
+                        <td>
+                            <v-chip color="red">
+                                {{ this.$props.analysis.errorCount }}
+                                ({{ (100 * analysis.errorCount / (analysis.totalCount)).toFixed(1) }}%)
+                            </v-chip>
                         </td>
                     </tr>
                     <tr>
@@ -38,7 +41,7 @@
                 </v-table>
 
                 <v-progress-circular
-                    class="mr-4 mt-6"
+                    class="mr-16 mt-6"
                     :size="160"
                     :width="30"
                     :model-value="100 * analysis.errorCount / analysis.totalCount"
@@ -60,27 +63,11 @@ export default {
             errorCount: Number,
             uniqueErrorCount: Number,
             validCount: Number,
-            syntaxErrorCount: Number,
-            nonExistentValueCount: Number,
-            constraintViolationCount: Number,
-            alreadyExistsErrorCount: Number,
-            aggregateErrorCount: Number,
-            typoCount: Number,
-            otherErrorCount: Number,
-            repeatedErrors: Array,
         }
     },
 }
 </script>
 
 <style scoped>
-
-.error-text-color {
-    color: red;
-}
-
-.valid-text-color {
-    color: green;
-}
 
 </style>

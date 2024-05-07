@@ -1,8 +1,8 @@
 /* eslint-disable */
 <template>
-    <div class="container">
+    <div class="container" style="padding-left: 150px; padding-right: 150px">
 
-        <v-card class="upload-container pa-6">
+        <v-card class="upload-container pa-7">
             <v-card-title>Laadi üles logifailide kaust</v-card-title>
 
             <v-spacer></v-spacer>
@@ -32,7 +32,7 @@
                 <div class="text-overline pb-2">
                     Analüüsi ajavahemik
                 </div>
-                <v-radio-group v-model="periodSelection">
+                <v-radio-group v-model="periodSelection" class="pl-2">
                     <v-radio label="Kõik logid" value="all"></v-radio>
                     <v-radio label="Viimane nädal" value="week"></v-radio>
                     <v-radio label="Muu ajavahemik" value="custom"></v-radio>
@@ -49,6 +49,8 @@
                     color="#3F51B5"
                     type="submit"
                     variant="elevated"
+                    :disabled="loading"
+                    :loading="loading"
                     @click="analyse"
                 >
                     Analüüsi
@@ -73,6 +75,7 @@ export default {
             selectedStartDate: new Date().toISOString().substring(0, 16),
             selectedEndDate: new Date().toISOString().substring(0, 16),
             uploadFailed: false,
+            loading: false,
         }
     },
 
@@ -93,13 +96,19 @@ export default {
                 return;
             }
 
+            this.loading = true;
+
             const path = this.uploadedFile.name.endsWith('.zip') ? 'zip' : 'single';
             axios.post('/analysis/' + path, this.createRequestData(), {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }})
-                .then(response => this.$emit('analysis', response.data))
+                .then((response) => {
+                    this.loading = false;
+                    this.$emit('analysis', response.data);
+                })
                 .catch(() => {
+                    this.loading = false;
                     this.uploadFailed = true;
                     this.errorMessage = 'Faili üleslaadimine ebaõnnestus. Kontrolli, et valitud fail on õiges' +
                         ' formaadis (.zip, .json või .log).'

@@ -1,10 +1,11 @@
 package ee.ut.loganalyser.logdata;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
-
 import java.util.Date;
 import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @Data
@@ -18,6 +19,8 @@ public class LogData {
     Date timestamp;
     @JsonProperty("error_severity")
     ErrorSeverity errorSeverity;
+    @JsonProperty("state_code")
+    String stateCode;
     String message;
     String detail;
     String hint;

@@ -1,18 +1,26 @@
 package ee.ut.loganalyser.logdata;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.NoArgsConstructor;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 public class LogParser {
@@ -106,7 +114,8 @@ public class LogParser {
                 if (logData.getErrorSeverity() != ErrorSeverity.LOG && logData.getStatement() != null) {
                     parsedLogFile.add(logData);
                 } else if (isByStudent(logData)) {
-                    logData.message = logData.message.substring(20);
+                    logData.statement = logData.message.substring(19);
+                    logData.message = null;
                     parsedLogFile.add(logData);
                 }
             }
@@ -126,6 +135,12 @@ public class LogParser {
             if (!line.isBlank()) {
                 if (lineStartPattern.matcher(line).matches()) {
                     if (line.contains("ERROR:")) {
+                        
+                        if (currentLogData.getErrorSeverity() != null && currentLogData.getStatement() != null) {
+                            parsedLogFile.add(currentLogData);
+                        }
+                        currentLogData = new LogData(ErrorSeverity.ERROR, line.split("ERROR:")[1].strip());
+
                         try {
                             currentLogData.timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(line.substring(0, 19));
                             if (start != null && currentLogData.timestamp.before(start)) {
@@ -137,12 +152,11 @@ public class LogParser {
                         } catch (ParseException e) {
                             System.out.println("Unable to parse date in plain text log: " + e);
                         }
-                        if (currentLogData.getErrorSeverity() != null && currentLogData.getStatement() != null) {
-                            parsedLogFile.add(currentLogData);
-                        }
-                        currentLogData = new LogData(ErrorSeverity.ERROR, line.split("ERROR:")[1].strip());
+                    
                     } else if (line.contains("STATEMENT:") && currentLogData.getStatement() == null) {
                         currentLogData.setStatement(line.split("STATEMENT:")[1].strip());
+                    } else if (line.contains("QUERY:") && currentLogData.getStatement() == null) {
+                        currentLogData.setStatement(line.split("QUERY:")[1].strip());
                     } else if (line.contains("HINT:")) {
                         currentLogData.setHint(line.split("HINT:")[1].strip());
                     } else if (line.contains("DETAIL:")) {
@@ -161,12 +175,12 @@ public class LogParser {
 
     private static boolean isByStudent(LogData logData) {
         if (logData.getMessage().startsWith("execute <")) {
-            logData.setStatement(logData.getMessage().split(": ", 2)[1]);
-            return !logData.getStatement().startsWith("SET")
-                    && !logData.getStatement().toLowerCase().startsWith("show")
-                    && !logData.getStatement().contains("pg_")
-                    && !logData.getStatement().contains("session_user")
-                    && !logData.getStatement().contains("version()");
+            String stmt = logData.getMessage().split(": ", 2)[1];
+            return !stmt.startsWith("SET")
+                    && !stmt.toLowerCase().startsWith("show")
+                    && !stmt.contains("pg_")
+                    && !stmt.contains("session_user")
+                    && !stmt.contains("version()");
         }
         return false;
     }
