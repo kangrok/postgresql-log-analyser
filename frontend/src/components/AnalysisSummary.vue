@@ -3,7 +3,7 @@
 
     <div class="text-h6 py-3">Rühma kokkuvõte</div>
 
-    <v-card class="py-10 rounded-0">
+    <v-card class="py-10">
 
         <div v-if="analysis.totalCount > 0">
 

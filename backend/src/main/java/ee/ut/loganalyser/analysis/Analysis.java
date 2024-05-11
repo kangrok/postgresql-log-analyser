@@ -84,10 +84,19 @@ public class Analysis {
             if (logData.getErrorSeverity() == ErrorSeverity.ERROR) {
                 errorCount++;
 
+                if (logData.getInternalQuery() != null) {
+                    logData.setStatement(logData.getInternalQuery());
+                }
+
+                if (logData.getContext() != null && logData.getContext().contains("PL/pgSQL function")) {
+                    logData.setContext(logData.getContext().substring(logData.getContext().lastIndexOf("PL/pgSQL function")));
+                }
+
                 if (logData.getHint() != null && logData.getHint().contains("Perhaps you meant")) {
                     logData.setErrorType(ErrorType.TYPO);
                     typoCount++;
-                } else if ("42804".equals(logData.getStateCode())) {
+                } else if ("42804".equals(logData.getStateCode())
+                        || logData.getHint() != null && logData.getHint().contains("type casts")) {
                     logData.setErrorType(ErrorType.DATATYPE_MISMATCH);
                     datatypeMismatchCount++;
                 } else if ("42803".equals(logData.getStateCode())

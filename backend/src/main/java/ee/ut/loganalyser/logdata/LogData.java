@@ -25,8 +25,23 @@ public class LogData {
     String detail;
     String hint;
     String statement;
+    @JsonProperty("internal_query")
+    String internalQuery;
+    String context;
 
     ErrorType errorType;
+
+    public void addStatementLine(String line) {
+        this.statement += '\n' + line;
+    }
+
+    public void addInternalQueryLine(String line) {
+        this.internalQuery += '\n' + line;
+    }
+
+    public void addContextLine(String line) {
+        this.context += '\n' + line;
+    }
 
     @Override
     public boolean equals(Object obj) {
@@ -37,11 +52,15 @@ public class LogData {
             return false;
         }
         return Objects.equals(logData.statement.toLowerCase(), this.statement.toLowerCase())
-                && Objects.equals(logData.message, this.message);
+                && Objects.equals(comparableMessage(logData.message), comparableMessage(this.message));
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(statement, message);
+    }
+
+    private String comparableMessage(String message) {
+        return message.split("at character")[0].toLowerCase();
     }
 }

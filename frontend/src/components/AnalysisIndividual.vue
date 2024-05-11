@@ -11,14 +11,14 @@
 
     <v-alert
         v-if="analysis.error"
-        class="mb-6 rounded-0"
+        class="mb-6"
         color="red"
         variant="tonal"
     >
         {{ errorMessage }}
     </v-alert>
 
-    <v-card class="py-8 rounded-0" v-if="analysis.fileNames.length !== 0 && !analysis.error">
+    <v-card class="py-8" v-if="analysis.fileNames.length !== 0 && !analysis.error">
         <div v-if="analysis.totalCount !== 0">
             <QueryEventsBar
                 :query-event-groups="analysis.queryEventGroups"

@@ -155,15 +155,21 @@ public class LogParser {
                     
                     } else if (line.contains("STATEMENT:") && currentLogData.getStatement() == null) {
                         currentLogData.setStatement(line.split("STATEMENT:")[1].strip());
-                    } else if (line.contains("QUERY:") && currentLogData.getStatement() == null) {
-                        currentLogData.setStatement(line.split("QUERY:")[1].strip());
+                    } else if (line.contains("QUERY:") && currentLogData.getInternalQuery() == null) {
+                        currentLogData.setInternalQuery(line.split("QUERY:")[1].strip());
                     } else if (line.contains("HINT:")) {
                         currentLogData.setHint(line.split("HINT:")[1].strip());
                     } else if (line.contains("DETAIL:")) {
                         currentLogData.setDetail(line.split("DETAIL:")[1].strip());
+                    } else if (line.contains("CONTEXT:")) {
+                        currentLogData.setContext(line.split("CONTEXT:")[1].strip());
                     }
-                } else {
-                    currentLogData.setStatement(currentLogData.getStatement() + "\n" + line);
+                } else if (currentLogData.getStatement() != null) {
+                    currentLogData.addStatementLine(line);
+                } else if (currentLogData.getContext() != null) {
+                    currentLogData.addContextLine(line);
+                } else if (currentLogData.getInternalQuery() != null) {
+                    currentLogData.addInternalQueryLine(line);
                 }
             }
         }

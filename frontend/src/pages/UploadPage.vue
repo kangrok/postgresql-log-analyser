@@ -10,7 +10,7 @@
             <v-card-text>
                 <v-alert
                     v-if="uploadFailed"
-                    class="mb-6 rounded-0"
+                    class="mb-6"
                     color="red"
                     variant="tonal"
                 >

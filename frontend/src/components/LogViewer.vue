@@ -1,6 +1,6 @@
 /* eslint-disable */
 <template>
-    <v-card rounded="0">
+    <v-card>
         <v-container class="pa-4">
 
             <v-card-actions>
@@ -15,10 +15,17 @@
                     {{ new Date(value).toLocaleString('en-GB') }}
                 </template>
 
-                <template v-slot:[`item.errorType`]="{ value }">
-                    <v-chip :color="value === 'VALID' ? 'green' : 'red'" size="small">
-                        {{ errorTypes[value] }}
-                    </v-chip>
+                <template v-slot:[`item.errorType`]="{ item, value }">
+                    <div v-if="item.internal_query" >
+                        <v-chip color="orange" size="small" class="mt-2">
+                            {{ errorTypes.function }}
+                        </v-chip>
+                    </div>
+                    <div>
+                        <v-chip :color="value === 'VALID' ? 'green' : 'red'" size="small" class="my-2">
+                            {{ errorTypes[value] }}
+                        </v-chip>
+                    </div>
                 </template>
 
                 <template v-slot:[`item.statementError`]="{ item, isExpanded, internalItem }">
@@ -40,9 +47,12 @@
 
                         <div v-if="isExpanded(internalItem) && item.message" class="pt-2">
                             <v-divider class="pb-2"/>
-                            <span style="color: red">
+                            <div style="color: red">
                                 {{ item.message }}
-                            </span>
+                            </div>
+                            <div v-if="item.internal_query">
+                                Context: {{ item.context }}
+                            </div>
                         </div>
 
                     </v-container>
@@ -89,7 +99,8 @@ export default {
                 ALREADY_EXISTS: 'Topelt defineerimine',
                 DATATYPE_MISMATCH: 'Andmetüübid',
                 CUSTOM_EXCEPTION: 'Enda veateade',
-                OTHER: 'Muu'
+                OTHER: 'Muu',
+                function: 'Funktsioon',
             },
         }
     },

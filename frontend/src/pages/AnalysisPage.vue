@@ -63,7 +63,7 @@
                 <div v-if="displayData.errorCount !== 0">
                     <div class="text-h6 mt-6 mb-3">Vigade analüüs</div>
 
-                    <v-card rounded="0">
+                    <v-card>
                         <v-container class="pa-8">
                             <h3 class="pb-6">Veatüüpide jaotus</h3>
 
